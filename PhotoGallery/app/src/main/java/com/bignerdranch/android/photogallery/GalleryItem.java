@@ -1,13 +1,19 @@
 package com.bignerdranch.android.photogallery;
 
 /**
- * Created by AGiP on 29.04.2021.
+ * Created by AGiP on 02.05.2021.
  */
 
 public class GalleryItem {
+
     private String mCaption;
     private String mId;
     private String mUrl;
+
+    @Override
+    public String toString() {
+        return mCaption;
+    }
 
     public String getCaption() {
         return mCaption;
@@ -21,8 +27,8 @@ public class GalleryItem {
         return mId;
     }
 
-    public void setId(String id) {
-        mId = id;
+    public void setId(String ID) {
+        mId = ID;
     }
 
     public String getUrl() {
@@ -31,11 +37,5 @@ public class GalleryItem {
 
     public void setUrl(String url) {
         mUrl = url;
-    }
-
-    @Override
-    public String toString() {
-        return mCaption;
-
     }
 }

@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by AGiP on 29.04.2021.
+ * Created by AGiP on 01.05.2021.
  */
 
 public class PhotoGalleryFragment extends Fragment {
@@ -31,39 +31,28 @@ public class PhotoGalleryFragment extends Fragment {
         return new PhotoGalleryFragment();
     }
 
-    private class FetchItemsTask extends AsyncTask<Void,Void,List<GalleryItem>> {
-        @Override
-        protected List<GalleryItem> doInBackground(Void... params) {
-           return new FlickrFetchr().fetchItems();
-        }
-
-        @Override
-        protected void onPostExecute(List<GalleryItem> items) {
-            mItems = items;
-            setupAdapter();
-        }
-    }
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute();
+        new FetchItemTask().execute();
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
         setupAdapter();
         return v;
     }
 
     private void setupAdapter() {
-        if (isAdded()) {
+        if (isAdded()){
             mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
         }
     }
@@ -74,29 +63,49 @@ public class PhotoGalleryFragment extends Fragment {
             super(itemView);
             mTitleTextView = (TextView) itemView;
         }
-        public void bindGalleryItem(GalleryItem item) {
-            mTitleTextView.setText(item.toString());
+
+        public void bindGalleryItem(GalleryItem item){
+                mTitleTextView.setText(itemView.toString());
         }
     }
 
-    private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
+    private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder>{
+
         private List<GalleryItem> mGalleryItems;
-        public PhotoAdapter(List<GalleryItem> galleryItems) {
+
+        public PhotoAdapter(List<GalleryItem> galleryItems){
             mGalleryItems = galleryItems;
         }
+
         @Override
-        public PhotoHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             TextView textView = new TextView(getActivity());
             return new PhotoHolder(textView);
         }
+
         @Override
         public void onBindViewHolder(PhotoHolder photoHolder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
             photoHolder.bindGalleryItem(galleryItem);
         }
+
         @Override
         public int getItemCount() {
             return mGalleryItems.size();
+        }
+    }
+
+    private class FetchItemTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+
+        @Override
+        protected List<GalleryItem> doInBackground(Void... voids) {
+            return new FlickrFetchr().fetchItems();
+        }
+
+        @Override
+        protected void onPostExecute(List<GalleryItem> items) {
+            mItems = items;
+            setupAdapter();
         }
     }
 }
