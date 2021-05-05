@@ -71,7 +71,9 @@ public class FlickrFetchr {
         } catch (JSONException je) {
             Log.e(TAG, "Failed to parse JSON", je);
         }
+
         return items;
+
     }
 
     private void parseItems(List<GalleryItem> items, JSONObject jsonBody)
