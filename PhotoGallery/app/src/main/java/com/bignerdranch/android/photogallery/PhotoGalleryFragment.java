@@ -23,6 +23,7 @@ import java.util.List;
 public class PhotoGalleryFragment extends Fragment {
 
     private static final String TAG = "PhotoGalleryFragment";
+    private int pageNumber = 1;
 
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
@@ -45,7 +46,20 @@ public class PhotoGalleryFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
         mPhotoRecyclerView = (RecyclerView) v.findViewById(R.id.photo_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        final GridLayoutManager lm = new GridLayoutManager(getActivity(), 3);
+        mPhotoRecyclerView.setLayoutManager(lm);
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int lastPosition = lm.findLastVisibleItemPosition();
+                int itemCount = lm.getItemCount();
+                if (lastPosition >= itemCount-1) {
+                    pageNumber++;
+                    new FetchItemTask().execute();
+                }
+            }
+        });
 
         setupAdapter();
         return v;
@@ -65,7 +79,7 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         public void bindGalleryItem(GalleryItem item){
-                mTitleTextView.setText(itemView.toString());
+                mTitleTextView.setText(item.toString());
         }
     }
 
@@ -99,7 +113,8 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
-            return new FlickrFetchr().fetchItems();
+//            System.out.println(pageNumber);
+            return new FlickrFetchr().fetchItems(Integer.toString(pageNumber));
         }
 
         @Override

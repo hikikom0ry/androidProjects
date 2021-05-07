@@ -25,6 +25,8 @@ public class FlickrFetchr {
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "e61da906fa2bfb8a92ba7a338fdda9fb";
 
+    public String numberOfPages;
+
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -51,8 +53,9 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(String pageNumber) {
         List<GalleryItem> items = new ArrayList<>();
+        System.out.println(pageNumber);
         try {
             String url = Uri.parse("https://api.flickr.com/services/rest/")
                     .buildUpon()
@@ -61,6 +64,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page", pageNumber)
                     .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
@@ -77,6 +81,7 @@ public class FlickrFetchr {
     private void parseItems(List<GalleryItem> items, JSONObject jsonBody)
             throws IOException, JSONException {
         JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
+        numberOfPages = photosJsonObject.getString("pages");
         JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
 
         for(int i = 0; i < photoJsonArray.length(); i++) {
@@ -93,6 +98,7 @@ public class FlickrFetchr {
             item.setUrl(photoJsonObject.getString("url_s"));
             items.add(item);
         }
+        System.out.println(items);
     }
 
 }
