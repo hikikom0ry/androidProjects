@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,11 +58,16 @@ public class PhotoGalleryFragment extends Fragment {
                 if (lastPosition >= itemCount-1) {
                     pageNumber++;
                     new FetchItemTask().execute();
+
+
+
+                    System.out.println(lm.getItemCount()-1);
                 }
             }
         });
 
         setupAdapter();
+
         return v;
     }
 
@@ -114,12 +120,14 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
 //            System.out.println(pageNumber);
-            return new FlickrFetchr().fetchItems(Integer.toString(pageNumber));
+            return FlickrFetchr.get().fetchItems(Integer.toString(pageNumber));
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
             mItems = items;
+
+            mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
             setupAdapter();
         }
     }

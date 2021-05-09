@@ -25,6 +25,23 @@ public class FlickrFetchr {
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "e61da906fa2bfb8a92ba7a338fdda9fb";
 
+    private static FlickrFetchr sFlickrFetchr;
+
+    private List<GalleryItem> items;
+
+    public static FlickrFetchr get() {
+        if (sFlickrFetchr == null) {
+            sFlickrFetchr = new FlickrFetchr();
+        }
+        return sFlickrFetchr;
+    }
+
+    private FlickrFetchr(){
+        items = new ArrayList<>();
+    }
+
+
+
     public String numberOfPages;
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
@@ -54,7 +71,7 @@ public class FlickrFetchr {
     }
 
     public List<GalleryItem> fetchItems(String pageNumber) {
-        List<GalleryItem> items = new ArrayList<>();
+//        List<GalleryItem> items = new ArrayList<>();
         System.out.println(pageNumber);
         try {
             String url = Uri.parse("https://api.flickr.com/services/rest/")
