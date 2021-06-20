@@ -33,7 +33,7 @@ public class PhotoGalleryFragment extends Fragment {
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
-    private LruCache<String, Bitmap> memoryCache;
+    private LruCache<PhotoHolder, Bitmap> memoryCache;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -48,9 +48,9 @@ public class PhotoGalleryFragment extends Fragment {
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
 
-        memoryCache = new LruCache<String, Bitmap>(cacheSize){
+        memoryCache = new LruCache<PhotoHolder, Bitmap>(cacheSize){
             @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
+            protected int sizeOf(PhotoHolder key, Bitmap bitmap) {
                 return bitmap.getByteCount() / 1024;
             }
         };
@@ -62,6 +62,7 @@ public class PhotoGalleryFragment extends Fragment {
                     @Override
                     public void onThumnailDownLoaded(PhotoHolder photoHolder, Bitmap bitmap) {
                         Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+                        addBitmapToMemoryCache(photoHolder, bitmap);
                         photoHolder.bindDrawable(drawable);
                     }
                 }
@@ -122,7 +123,14 @@ public class PhotoGalleryFragment extends Fragment {
             GalleryItem galleryItem = mGalleryItems.get(position);
             Drawable placeholder = getResources().getDrawable(R.drawable.bill_up_close);
             photoHolder.bindDrawable(placeholder);
-            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+            final Bitmap cacheBitmap = getBitmapFromMemoryCache(photoHolder);
+            if (cacheBitmap != null){
+                Drawable drawable = new BitmapDrawable(getResources(), cacheBitmap);
+                photoHolder.bindDrawable(drawable);
+            } else{
+                mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+
+            }
         }
 
         @Override
@@ -143,6 +151,16 @@ public class PhotoGalleryFragment extends Fragment {
             mItems = items;
             setupAdapter();
         }
+    }
+
+    public void addBitmapToMemoryCache(PhotoHolder holder, Bitmap bitmap){
+        if(memoryCache.get(holder) == null){
+            memoryCache.put(holder, bitmap);
+        }
+    }
+
+    public Bitmap getBitmapFromMemoryCache(PhotoHolder holder){
+        return memoryCache.get(holder);
     }
 
     @Override
