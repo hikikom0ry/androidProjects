@@ -20,7 +20,9 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by AGiP on 01.05.2021.
@@ -33,7 +35,9 @@ public class PhotoGalleryFragment extends Fragment {
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
-    private LruCache<PhotoHolder, Bitmap> memoryCache;
+    private LruCache<Integer, Bitmap> memoryCache;
+    private ConcurrentHashMap<Integer,String> mCheckMap = new ConcurrentHashMap<>();
+    private int holderPosition;
 
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -46,11 +50,11 @@ public class PhotoGalleryFragment extends Fragment {
         new FetchItemTask().execute();
 
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-        final int cacheSize = maxMemory / 8;
+        final int cacheSize = maxMemory / 16;
 
-        memoryCache = new LruCache<PhotoHolder, Bitmap>(cacheSize){
+        memoryCache = new LruCache<Integer, Bitmap>(cacheSize){
             @Override
-            protected int sizeOf(PhotoHolder key, Bitmap bitmap) {
+            protected int sizeOf(Integer key, Bitmap bitmap) {
                 return bitmap.getByteCount() / 1024;
             }
         };
@@ -60,9 +64,11 @@ public class PhotoGalleryFragment extends Fragment {
         mThumbnailDownloader.setThumbnailDownloadListener(
                 new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
                     @Override
-                    public void onThumnailDownLoaded(PhotoHolder photoHolder, Bitmap bitmap) {
+                    public void onThumnailDownLoaded(PhotoHolder photoHolder, Bitmap bitmap, String url) {
                         Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                        addBitmapToMemoryCache(photoHolder, bitmap);
+                        addBitmapToMemoryCache(photoHolder.getLayoutPosition(), bitmap);
+                        holderPosition = photoHolder.getLayoutPosition();
+                        mCheckMap.put(holderPosition, url);
                         photoHolder.bindDrawable(drawable);
                     }
                 }
@@ -123,11 +129,13 @@ public class PhotoGalleryFragment extends Fragment {
             GalleryItem galleryItem = mGalleryItems.get(position);
             Drawable placeholder = getResources().getDrawable(R.drawable.bill_up_close);
             photoHolder.bindDrawable(placeholder);
-            final Bitmap cacheBitmap = getBitmapFromMemoryCache(photoHolder);
-            if (cacheBitmap != null){
+            final Bitmap cacheBitmap = getBitmapFromMemoryCache(position);
+            if (cacheBitmap != null && galleryItem.getUrl() == mCheckMap.get(photoHolder.getLayoutPosition())){
                 Drawable drawable = new BitmapDrawable(getResources(), cacheBitmap);
                 photoHolder.bindDrawable(drawable);
+                Log.d("BMP from cache", galleryItem.getUrl());
             } else{
+                mCheckMap.remove(photoHolder.getLayoutPosition());
                 mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
 
             }
@@ -153,14 +161,14 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    public void addBitmapToMemoryCache(PhotoHolder holder, Bitmap bitmap){
-        if(memoryCache.get(holder) == null){
-            memoryCache.put(holder, bitmap);
+    public void addBitmapToMemoryCache(int position, Bitmap bitmap){
+        if(memoryCache.get(position) == null){
+            memoryCache.put(position, bitmap);
         }
     }
 
-    public Bitmap getBitmapFromMemoryCache(PhotoHolder holder){
-        return memoryCache.get(holder);
+    public Bitmap getBitmapFromMemoryCache(int position){
+        return memoryCache.get(position);
     }
 
     @Override

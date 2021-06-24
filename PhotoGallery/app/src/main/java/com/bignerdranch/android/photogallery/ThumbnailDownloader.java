@@ -25,7 +25,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
 
     public interface ThumbnailDownloadListener<T> {
-        void onThumnailDownLoaded(T target, Bitmap thumbnail);
+        void onThumnailDownLoaded(T target, Bitmap thumbnail, String url);
     }
 
     public void setThumbnailDownloadListener(ThumbnailDownloadListener<T> listener) {
@@ -96,7 +96,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                     }
 
                     mRequestMap.remove(target);
-                    mThumbnailDownloadListener.onThumnailDownLoaded(target, bitmap);
+                    mThumbnailDownloadListener.onThumnailDownLoaded(target, bitmap, url);
                 }
             });
         } catch (IOException ioe) {
